@@ -1,0 +1,325 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  role          String    @default("USER")
+  active        Boolean   @default(true)
+  sessions      Session[]
+  accounts      Account[]
+
+  createdProjects     Project[]       @relation("ProjectCreator")
+  memberships         ProjectMember[]
+  reportedIssues      Issue[]         @relation("IssueReporter")
+  assignedIssues      Issue[]         @relation("IssueAssignee")
+  comments            Comment[]
+  uploadedAttachments Attachment[]
+  activities          ActivityLog[]
+  notifications       Notification[]
+  savedFilters        SavedFilter[]
+  adminAudits         AdminAudit[]
+  dependenciesCreated Dependency[]
+
+  @@unique([email])
+  @@index([role, active])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model AppSetting {
+  id               String   @id @default("app")
+  organizationName String   @default("IssueFlow")
+  timezone         String   @default("UTC")
+  updatedAt        DateTime @updatedAt
+}
+
+model Project {
+  id              String        @id @default(cuid())
+  name            String
+  key             String        @unique
+  description     String?
+  status          ProjectStatus @default(ACTIVE)
+  archivedAt      DateTime?
+  nextIssueNumber Int           @default(1)
+  createdById     String
+  createdBy       User          @relation("ProjectCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  members         ProjectMember[]
+  issues          Issue[]
+  tags            Tag[]
+
+  @@index([status])
+}
+
+model ProjectMember {
+  projectId String
+  userId    String
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+  @@index([userId])
+}
+
+model Issue {
+  id          String      @id @default(cuid())
+  projectId   String
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  number      Int
+  title       String
+  description String?
+  type        IssueType
+  status      IssueStatus @default(BACKLOG)
+  priority    Priority    @default(MEDIUM)
+  assigneeId  String?
+  assignee    User?       @relation("IssueAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  reporterId  String
+  reporter    User        @relation("IssueReporter", fields: [reporterId], references: [id], onDelete: Restrict)
+  dueDate     DateTime?   @db.Date
+  parentId    String?
+  parent      Issue?      @relation("IssueChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Issue[]     @relation("IssueChildren")
+  rank        Float       @default(1000)
+  archivedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  tags        IssueTag[]
+  comments    Comment[]
+  attachments Attachment[]
+  activities  ActivityLog[]
+  notifications Notification[]
+  blocking    Dependency[] @relation("DependencySource")
+  blockedBy   Dependency[] @relation("DependencyTarget")
+
+  @@unique([projectId, number])
+  @@index([projectId, status, rank])
+  @@index([assigneeId, status])
+  @@index([dueDate])
+  @@index([updatedAt])
+  @@index([archivedAt])
+  @@index([parentId])
+}
+
+model Tag {
+  id        String     @id @default(cuid())
+  projectId String
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  color     String
+  createdAt DateTime   @default(now())
+  issues    IssueTag[]
+
+  @@unique([projectId, name])
+}
+
+model IssueTag {
+  issueId String
+  tagId   String
+  issue   Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([issueId, tagId])
+  @@index([tagId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  issueId   String
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([issueId, createdAt])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  issueId   String
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action    String
+  field     String?
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime @default(now())
+
+  @@index([issueId, createdAt])
+}
+
+model Attachment {
+  id           String   @id @default(cuid())
+  issueId      String
+  issue        Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  fileName     String
+  storedName   String   @unique
+  mimeType     String
+  sizeBytes    Int
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  createdAt    DateTime @default(now())
+
+  @@index([issueId])
+}
+
+model Dependency {
+  id          String         @id @default(cuid())
+  issueId     String
+  issue       Issue          @relation("DependencySource", fields: [issueId], references: [id], onDelete: Cascade)
+  relatedId   String
+  related     Issue          @relation("DependencyTarget", fields: [relatedId], references: [id], onDelete: Cascade)
+  type        DependencyType
+  createdById String
+  createdBy   User           @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime       @default(now())
+
+  @@unique([issueId, relatedId, type])
+  @@index([relatedId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  issueId   String?
+  issue     Issue?           @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  dedupKey  String?          @unique
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+model SavedFilter {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  queryString String
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, name])
+}
+
+model AdminAudit {
+  id         String   @id @default(cuid())
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action     String
+  targetType String
+  targetId   String?
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum IssueType {
+  BUG
+  TASK
+  STORY
+  FEATURE
+  RESEARCH
+}
+
+enum IssueStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  BLOCKED
+  DONE
+}
+
+enum Priority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum DependencyType {
+  BLOCKS
+  RELATES
+  DUPLICATES
+}
+
+enum NotificationType {
+  ASSIGNED
+  COMMENT
+  MENTION
+  DUE_TOMORROW
+  DUE_TODAY
+  OVERDUE
+}

@@ -1,0 +1,35 @@
+{
+  "docId": "issueflow.prd.v1.boundaries",
+  "corpus": "issueflow",
+  "corpusVersion": "issueflow-prd-1.0.0",
+  "kind": "requirement",
+  "authority": "normative",
+  "title": "IssueFlow product vision, goals, and v1 non-goals",
+  "prdSections": [
+    "1",
+    "1.1",
+    "1.2",
+    "15"
+  ],
+  "entities": [
+    "IssueFlow"
+  ],
+  "keywords": [
+    "vision",
+    "non-goals",
+    "self-hosted",
+    "manual-first"
+  ],
+  "questions": [
+    "What is IssueFlow?",
+    "Who is IssueFlow for?",
+    "What is explicitly out of scope for version 1?",
+    "Does IssueFlow v1 integrate with GitHub, Slack, or Jira?"
+  ],
+  "text": "IssueFlow v1.0 is a multi-user, self-hosted web application for small and medium-sized teams. Teams use it to create projects, manage issues, track progress, collaborate, and organize work. The tagline is \"Your work. Your issues. Your control.\" The default appearance is a dark theme. Deployment is local, through Docker Compose.\r\n\r\nThe product is manual-first. A person creates each issue, assigns people, selects priority, updates status, adds tags, creates subtasks, and marks work complete. The system may generate issue IDs, record activity, calculate dashboard statistics, persist data, and send reminders from dates a person entered. It does not independently make project-management decisions.\r\n\r\nProduct goals:\r\n\r\n1. Provide a premium, minimalist user interface.\r\n2. Make issue creation and management fast and intuitive.\r\n3. Support multiple team members with role-based permissions.\r\n4. Provide essential project-management and collaboration functionality.\r\n5. Keep application data on the user's own infrastructure.\r\n6. Make installation and operation simple through Docker.\r\n7. Avoid unnecessary automation and feature complexity.\r\n\r\nVersion 1 non-goals are: AI-generated issues or descriptions; automatic issue assignment; automatic status changes; automatic issue creation; GitHub or GitLab integrations; Slack integrations; external Jira synchronization; sprint planning and velocity tracking; time tracking and billing; public issue portals; complex workflow automation; email automation.\r\n\r\nThe intended product outcome is that a team can run its issue-tracking workflow in IssueFlow and keep full control of its data and decisions. The PRD directs a polished, practical issue tracker with a short feature set. Build priority is excellent UI, simple workflows, manual control, reliable issues/comments/attachments/activity, easy Docker deployment, and a maintainable codebase.",
+  "sourceFile": "documents/01-product-boundaries.md",
+  "typeOfLLM": "issueflow-kb",
+  "embedding": "<float[] produced at ingest time>",
+  "createdAt": "2026-11-23T00:00:00.000Z",
+  "updatedAt": "2026-11-23T00:00:00.000Z"
+}

@@ -1,0 +1,1175 @@
+{
+  "corpus": "issueflow",
+  "corpusVersion": "issueflow-prd-1.0.0",
+  "source": "IssueFlow PRD v1.0",
+  "embedField": "text",
+  "embedPrefix": "title + questions + text",
+  "recordCount": 32,
+  "embedCount": 32,
+  "records": [
+    {
+      "docId": "issueflow.prd.v1.boundaries",
+      "title": "IssueFlow product vision, goals, and v1 non-goals",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "1",
+        "1.1",
+        "1.2",
+        "15"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "IssueFlow"
+      ],
+      "keywords": [
+        "vision",
+        "non-goals",
+        "self-hosted",
+        "manual-first"
+      ],
+      "questions": [
+        "What is IssueFlow?",
+        "Who is IssueFlow for?",
+        "What is explicitly out of scope for version 1?",
+        "Does IssueFlow v1 integrate with GitHub, Slack, or Jira?"
+      ],
+      "sourceFile": "documents/01-product-boundaries.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.manual-boundary",
+      "title": "Manual actions versus allowed automatic behavior",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "3",
+        "3.1",
+        "4.7",
+        "4.8",
+        "4.14"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Worker",
+        "ActivityLog",
+        "Notification"
+      ],
+      "keywords": [
+        "manual-first",
+        "automatic",
+        "status",
+        "reminders",
+        "worker"
+      ],
+      "questions": [
+        "What may IssueFlow change automatically?",
+        "Can a background job change issue status, assignee, or priority?",
+        "Are due-date reminders allowed to edit the issue?",
+        "Does completing every subtask mark the parent Done?"
+      ],
+      "sourceFile": "documents/02-manual-automatic-boundary.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.roles",
+      "title": "Application roles and the permissions the PRD states",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "2",
+        "2.1"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Admin",
+        "Manager",
+        "Member",
+        "ProjectMember"
+      ],
+      "keywords": [
+        "RBAC",
+        "roles",
+        "permissions",
+        "project membership"
+      ],
+      "questions": [
+        "What roles does IssueFlow have?",
+        "What can an Admin, Manager, and Member do?",
+        "Does a Member create projects?",
+        "Where is project membership separate from application role?"
+      ],
+      "sourceFile": "documents/03-roles.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.authentication",
+      "title": "Authentication, sessions, and account administration",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "2.1",
+        "6.2",
+        "6.3",
+        "7",
+        "9"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "User",
+        "Account",
+        "Session",
+        "Verification",
+        "BetterAuth"
+      ],
+      "keywords": [
+        "authentication",
+        "password",
+        "session",
+        "Better Auth",
+        "bootstrap admin"
+      ],
+      "questions": [
+        "How do users sign in to IssueFlow?",
+        "Can people register themselves?",
+        "Who creates accounts?",
+        "What happens when a user is deactivated?",
+        "How is the first admin created?"
+      ],
+      "sourceFile": "documents/04-authentication.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.dashboard",
+      "title": "Overview dashboard contents and calculation rules",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.1",
+        "5.3",
+        "11"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Dashboard",
+        "Issue",
+        "Notification"
+      ],
+      "keywords": [
+        "dashboard",
+        "overview",
+        "statistics",
+        "deadlines"
+      ],
+      "questions": [
+        "What does the IssueFlow dashboard show?",
+        "Can the dashboard create or edit issues?",
+        "How fast should the dashboard load?"
+      ],
+      "sourceFile": "documents/05-dashboard.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.projects",
+      "title": "Projects, project keys, members, and tags",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.2",
+        "4.12"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Project",
+        "ProjectMember",
+        "Tag"
+      ],
+      "keywords": [
+        "project",
+        "project key",
+        "archive",
+        "members"
+      ],
+      "questions": [
+        "What fields does a project have?",
+        "Can a project key change after issues exist?",
+        "What project actions exist?",
+        "Are tags global or per project?"
+      ],
+      "sourceFile": "documents/06-projects.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.issue-model",
+      "title": "Issue fields, types, statuses, and priorities",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.3"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Issue",
+        "Project",
+        "User",
+        "Tag"
+      ],
+      "keywords": [
+        "issue fields",
+        "bug",
+        "status",
+        "priority",
+        "reporter"
+      ],
+      "questions": [
+        "What fields does an issue have?",
+        "Which issue fields are required?",
+        "What are the issue types, statuses, and priorities?",
+        "Who is the reporter?"
+      ],
+      "sourceFile": "documents/07-issue-model.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.issue-keys",
+      "title": "Issue key format and concurrent unique numbering",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.3",
+        "7.1"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Issue",
+        "Project"
+      ],
+      "keywords": [
+        "issue key",
+        "ECOM-001",
+        "sequence",
+        "transaction"
+      ],
+      "questions": [
+        "What does an issue key look like?",
+        "How are issue numbers generated when two users create issues at once?",
+        "Are issue keys unique?"
+      ],
+      "sourceFile": "documents/08-issue-keys.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.issue-actions",
+      "title": "Issue actions, archive, restore, delete, and duplicate",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.3",
+        "4.4"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Issue"
+      ],
+      "keywords": [
+        "create issue",
+        "archive",
+        "delete",
+        "duplicate",
+        "bulk actions"
+      ],
+      "questions": [
+        "What actions can a user take on an issue?",
+        "Is delete the same as archive?",
+        "What does duplicating an issue mean?",
+        "Which bulk actions exist?"
+      ],
+      "sourceFile": "documents/09-issue-actions.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.discovery",
+      "title": "All Issues, My Issues, search, sort, and saved filters",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.4",
+        "4.13",
+        "5.3",
+        "11"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Issue",
+        "SavedFilter"
+      ],
+      "keywords": [
+        "search",
+        "filters",
+        "pagination",
+        "saved filters",
+        "All Issues"
+      ],
+      "questions": [
+        "How do users find issues?",
+        "Which fields can be searched, filtered, and sorted?",
+        "What saved filters are listed as examples?",
+        "Are saved filters shared?"
+      ],
+      "sourceFile": "documents/10-discovery-filters.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.kanban",
+      "title": "Kanban board columns, drag-and-drop, and card order",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.5",
+        "6.2"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Issue",
+        "Kanban"
+      ],
+      "keywords": [
+        "kanban",
+        "drag and drop",
+        "dnd-kit",
+        "status columns"
+      ],
+      "questions": [
+        "What columns does the Kanban board have?",
+        "What does dragging a card do?",
+        "What does a card show?",
+        "Does the board reorder cards by itself?"
+      ],
+      "sourceFile": "documents/11-kanban.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.issue-details",
+      "title": "Issue detail layout and editable properties",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.6",
+        "5.4",
+        "11"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Issue"
+      ],
+      "keywords": [
+        "issue details",
+        "two-column",
+        "properties panel"
+      ],
+      "questions": [
+        "What does the issue detail page show?",
+        "Which properties are editable?",
+        "How does issue detail behave on mobile?",
+        "How fast should issue detail load?"
+      ],
+      "sourceFile": "documents/12-issue-details.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.subtasks",
+      "title": "Subtasks, their own keys, and parent completion statistics",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.7",
+        "8.1"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Issue",
+        "Subtask"
+      ],
+      "keywords": [
+        "subtasks",
+        "parent issue",
+        "completion statistics"
+      ],
+      "questions": [
+        "How do subtasks work?",
+        "Does a subtask get its own issue key?",
+        "Does finishing all subtasks complete the parent?",
+        "What is the subtasks API?"
+      ],
+      "sourceFile": "documents/13-subtasks.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.dependencies",
+      "title": "Issue dependency types and blocking rules",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.8",
+        "7.1"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Dependency",
+        "Issue"
+      ],
+      "keywords": [
+        "blocks",
+        "relates to",
+        "duplicates",
+        "circular dependency"
+      ],
+      "questions": [
+        "What issue relationship types exist?",
+        "Are Blocks and Is blocked by stored separately?",
+        "What dependency links are rejected?",
+        "Does a blocking link change status to Blocked?"
+      ],
+      "sourceFile": "documents/14-dependencies.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.comments-activity",
+      "title": "Comments, mentions, and server-written activity history",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.9",
+        "7.1"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Comment",
+        "ActivityLog",
+        "Issue"
+      ],
+      "keywords": [
+        "comments",
+        "activity history",
+        "audit",
+        "markdown comments"
+      ],
+      "questions": [
+        "What comment actions exist?",
+        "Which changes are written to activity history?",
+        "What does an activity record contain?",
+        "Can the client submit an activity record?"
+      ],
+      "sourceFile": "documents/15-comments-activity.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.markdown",
+      "title": "Markdown in descriptions and comments, and sanitization",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.10",
+        "6.2",
+        "9"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Issue",
+        "Comment"
+      ],
+      "keywords": [
+        "markdown",
+        "TipTap",
+        "sanitization",
+        "XSS"
+      ],
+      "questions": [
+        "Which Markdown features are supported?",
+        "Why must Markdown be sanitized?",
+        "Which editor is specified?"
+      ],
+      "sourceFile": "documents/16-markdown.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.attachments",
+      "title": "Attachment types, limits, storage, and authorized download",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.11",
+        "6.1",
+        "6.3",
+        "7.1",
+        "9",
+        "11"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P1",
+      "status": "specified",
+      "entities": [
+        "Attachment",
+        "Issue"
+      ],
+      "keywords": [
+        "attachments",
+        "20 MB",
+        "upload",
+        "persistent volume"
+      ],
+      "questions": [
+        "Which file types can be uploaded?",
+        "What is the maximum attachment size?",
+        "Where are files stored?",
+        "Can attachment URLs be public?"
+      ],
+      "sourceFile": "documents/17-attachments.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.notifications",
+      "title": "In-app notifications and due-date reminders",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.14",
+        "1.2",
+        "6.1",
+        "6.3"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P1",
+      "status": "specified",
+      "entities": [
+        "Notification",
+        "Worker",
+        "Issue"
+      ],
+      "keywords": [
+        "notifications",
+        "reminders",
+        "due date",
+        "pg-boss",
+        "no email"
+      ],
+      "questions": [
+        "Which notification types exist?",
+        "Are reminders sent by email?",
+        "What process sends due-date reminders?",
+        "Can a reminder change the issue?"
+      ],
+      "sourceFile": "documents/18-notifications.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.export-backup",
+      "title": "CSV and JSON export, backups, and restore",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4.15",
+        "8.1",
+        "10",
+        "14"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P1",
+      "status": "specified",
+      "entities": [
+        "Issue",
+        "Attachment"
+      ],
+      "keywords": [
+        "export",
+        "CSV",
+        "JSON",
+        "backup",
+        "restore"
+      ],
+      "questions": [
+        "What can users export, and in which formats?",
+        "What must a backup include?",
+        "How many backup sets are kept?",
+        "When is restore tested?"
+      ],
+      "sourceFile": "documents/19-export-backup.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.ui",
+      "title": "Visual design, navigation, screens, and responsive behavior",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "5",
+        "5.1",
+        "5.2",
+        "5.3",
+        "5.4",
+        "6.2"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "IssueFlow"
+      ],
+      "keywords": [
+        "dark theme",
+        "sidebar",
+        "shadcn",
+        "Inter",
+        "screens"
+      ],
+      "questions": [
+        "What should IssueFlow look like?",
+        "What is in the sidebar and top bar?",
+        "Which screens are P0 and which are P1?",
+        "How does the layout behave on a phone?"
+      ],
+      "sourceFile": "documents/20-ui.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.architecture",
+      "title": "Modular monolith, technology stack, and process split",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "6.1",
+        "6.2"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Nextjs",
+        "Prisma",
+        "PostgreSQL",
+        "BetterAuth",
+        "Worker"
+      ],
+      "keywords": [
+        "modular monolith",
+        "Next.js",
+        "Prisma",
+        "PostgreSQL",
+        "pg-boss"
+      ],
+      "questions": [
+        "What architecture does IssueFlow use?",
+        "What is the technology stack?",
+        "Which process runs reminders?",
+        "Where does business logic live?"
+      ],
+      "sourceFile": "documents/21-architecture.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.docker",
+      "title": "Docker Compose services, volumes, bootstrap, and install path",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "6.3",
+        "14"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Docker",
+        "PostgreSQL",
+        "Worker"
+      ],
+      "keywords": [
+        "docker compose",
+        "localhost:3000",
+        "migrations",
+        "bootstrap admin"
+      ],
+      "questions": [
+        "How is IssueFlow installed?",
+        "Which containers are required?",
+        "Which data survives a restart?",
+        "Is PostgreSQL published on the host?"
+      ],
+      "sourceFile": "documents/22-docker.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.data-model",
+      "title": "Database entities and transactional integrity rules",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "7",
+        "7.1"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "User",
+        "Project",
+        "Issue",
+        "Tag",
+        "Comment",
+        "ActivityLog",
+        "Attachment",
+        "Dependency",
+        "Notification",
+        "SavedFilter"
+      ],
+      "keywords": [
+        "PostgreSQL",
+        "Prisma",
+        "entities",
+        "transactions",
+        "indexes"
+      ],
+      "questions": [
+        "Which database entities does IssueFlow v1 include?",
+        "Which writes must share a transaction?",
+        "What integrity rules does the database enforce?"
+      ],
+      "sourceFile": "documents/23-data-model.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.api",
+      "title": "REST API envelope, prefix, and endpoint groups",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "8",
+        "8.1",
+        "11"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Issue",
+        "Project",
+        "User"
+      ],
+      "keywords": [
+        "API",
+        "/api/v1",
+        "Zod",
+        "error envelope"
+      ],
+      "questions": [
+        "What is the IssueFlow API prefix and response shape?",
+        "Which endpoint groups exist?",
+        "What must every endpoint do before business logic?",
+        "What is the typical API latency target?"
+      ],
+      "sourceFile": "documents/24-api.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.security",
+      "title": "Security controls required even for local installs",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "9",
+        "2.1",
+        "4.10",
+        "4.11"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "User",
+        "Session",
+        "Attachment"
+      ],
+      "keywords": [
+        "security",
+        "RBAC",
+        "rate limit",
+        "sanitization",
+        "audit"
+      ],
+      "questions": [
+        "What security controls does IssueFlow require?",
+        "Are local installs exempt from authorization?",
+        "Who can download an attachment?",
+        "Which admin actions are audited?"
+      ],
+      "sourceFile": "documents/25-security.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.acceptance",
+      "title": "Performance targets, acceptance scenario, roadmap, and definition of done",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "5.3",
+        "11",
+        "12",
+        "13",
+        "14"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "IssueFlow"
+      ],
+      "keywords": [
+        "acceptance",
+        "definition of done",
+        "roadmap",
+        "P0",
+        "P1",
+        "performance"
+      ],
+      "questions": [
+        "When is the IssueFlow MVP functionally complete?",
+        "What are the performance targets?",
+        "What is the difference between P0 and P1?",
+        "What is the build order?"
+      ],
+      "sourceFile": "documents/26-acceptance-roadmap.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.gaps",
+      "title": "Decisions the PRD leaves open",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "2",
+        "4",
+        "5",
+        "7",
+        "8",
+        "9"
+      ],
+      "kind": "gap",
+      "authority": "unspecified",
+      "embed": true,
+      "priority": "P0",
+      "status": "unspecified",
+      "entities": [
+        "Issue",
+        "Project",
+        "Notification",
+        "SavedFilter"
+      ],
+      "keywords": [
+        "unspecified",
+        "open question",
+        "gap",
+        "permission matrix"
+      ],
+      "questions": [
+        "What does the IssueFlow PRD leave unspecified?",
+        "Who can delete an issue?",
+        "Are saved filters private?",
+        "What timezone do due reminders use?",
+        "Can issues be nested more than one level?"
+      ],
+      "sourceFile": "documents/27-gaps.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.recommendations",
+      "title": "Advisory defaults for the open PRD decisions",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "2",
+        "3.1",
+        "4",
+        "7.1"
+      ],
+      "kind": "recommendation",
+      "authority": "advisory",
+      "embed": true,
+      "priority": "P0",
+      "status": "proposed",
+      "entities": [
+        "Issue",
+        "ProjectMember",
+        "Worker"
+      ],
+      "keywords": [
+        "recommendation",
+        "default",
+        "permission matrix",
+        "not a requirement"
+      ],
+      "questions": [
+        "What implementation defaults are proposed for IssueFlow gaps?",
+        "Are these defaults part of the PRD?",
+        "How should blocking links be stored?"
+      ],
+      "sourceFile": "documents/28-recommendations.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.digitrac-integration",
+      "title": "Later Digitrac knowledge-base integration contract",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "1.2",
+        "3.1"
+      ],
+      "kind": "integration",
+      "authority": "advisory",
+      "embed": true,
+      "priority": "P1",
+      "status": "proposed",
+      "entities": [
+        "Digitrac",
+        "IssueFlow",
+        "Notification"
+      ],
+      "keywords": [
+        "Digitrac",
+        "digitrail",
+        "RAG",
+        "knowledgechunks",
+        "llmtransactions"
+      ],
+      "questions": [
+        "How should IssueFlow knowledge integrate with Digitrac later?",
+        "Can Digitrac AI reports answer IssueFlow questions?",
+        "May Digitrac automatically create an IssueFlow issue?",
+        "Which Mongo collections store this knowledge base?"
+      ],
+      "sourceFile": "documents/29-digitrac-integration.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.rag-policy",
+      "title": "Answer policy for a RAG system using this corpus",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "1",
+        "3.1"
+      ],
+      "kind": "integration",
+      "authority": "advisory",
+      "embed": true,
+      "priority": "P0",
+      "status": "proposed",
+      "entities": [
+        "IssueFlow"
+      ],
+      "keywords": [
+        "RAG",
+        "citation",
+        "grounding",
+        "answer policy"
+      ],
+      "questions": [
+        "How should a RAG answer behave when using the IssueFlow knowledge base?",
+        "What should the model do when the PRD does not specify something?",
+        "Which metadata filters should a retrieval query set?"
+      ],
+      "sourceFile": "documents/30-rag-policy.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.entity-glossary",
+      "title": "Entity glossary for IssueFlow",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "2",
+        "7"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "User",
+        "Project",
+        "Issue",
+        "Tag",
+        "Comment",
+        "ActivityLog",
+        "Attachment",
+        "Dependency",
+        "Notification",
+        "SavedFilter"
+      ],
+      "keywords": [
+        "glossary",
+        "entities",
+        "domain model"
+      ],
+      "questions": [
+        "What are the main IssueFlow entities?",
+        "Is a subtask a separate entity?",
+        "What does ProjectMember represent?"
+      ],
+      "sourceFile": "documents/31-entity-glossary.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    },
+    {
+      "docId": "issueflow.prd.v1.relationships",
+      "title": "Relationships between IssueFlow entities",
+      "corpus": "issueflow",
+      "source": "IssueFlow_PRD.md",
+      "sourceVersion": "1.0",
+      "prdSections": [
+        "4",
+        "7"
+      ],
+      "kind": "requirement",
+      "authority": "normative",
+      "embed": true,
+      "priority": "P0",
+      "status": "specified",
+      "entities": [
+        "Issue",
+        "Project",
+        "User",
+        "Dependency",
+        "ActivityLog"
+      ],
+      "keywords": [
+        "relationships",
+        "entity graph",
+        "parent issue",
+        "membership"
+      ],
+      "questions": [
+        "How are IssueFlow entities related?",
+        "What is the parent of a subtask?",
+        "What writes activity and notifications?"
+      ],
+      "sourceFile": "documents/32-relationships.md",
+      "corpusVersion": "issueflow-prd-1.0.0"
+    }
+  ]
+}
