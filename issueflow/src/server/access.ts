@@ -3,30 +3,34 @@ import { AppError, forbidden, notFound } from "@/lib/errors";
 import { can, type Actor } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
-const membership = (actor: Actor) => ({ where: { userId: actor.id }, select: { userId: true } });
+const membership = (actor: Actor) => ({ where: { userId: actor.id }, select: { userId: true, delegated: true } });
 
-export async function assertProject(actor: Actor, projectId: string, write = false) {
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
+export async function assertCompany(actor: Actor, companyId: string) {
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
     include: { members: membership(actor) },
   });
-  if (!project || (actor.role !== "SUPERADMIN" && project.members.length === 0)) throw notFound("Project not found");
-  if (write && project.status === "ARCHIVED") {
-    throw new AppError(400, "VALIDATION_ERROR", "This project is archived");
-  }
-  return project;
+  if (!company || (actor.role !== "SUPERADMIN" && company.members.length === 0)) throw notFound("Company not found");
+  return company;
+}
+
+export async function assertCompanyAdmin(actor: Actor, companyId: string) {
+  const company = await assertCompany(actor, companyId);
+  const delegated = company.members.some((member) => member.delegated);
+  if (actor.role === "SUPERADMIN" || actor.role === "ADMIN" || delegated) return company;
+  throw forbidden();
 }
 
 export async function assertIssue(actor: Actor, issueId: string) {
   const issue = await prisma.issue.findUnique({
     where: { id: issueId },
     include: {
-      project: { include: { members: membership(actor) } },
+      company: { include: { members: membership(actor) } },
       assignee: { select: { id: true, name: true } },
       tags: { select: { tagId: true, tag: { select: { id: true, name: true, color: true } } } },
     },
   });
-  if (!issue || (actor.role !== "SUPERADMIN" && issue.project.members.length === 0)) throw notFound("Issue not found");
+  if (!issue || (actor.role !== "SUPERADMIN" && issue.company.members.length === 0)) throw notFound("Issue not found");
   return issue;
 }
 
@@ -34,14 +38,14 @@ export function assertCan(actor: Actor, action: Parameters<typeof can>[1]) {
   if (!can(actor, action)) throw forbidden();
 }
 
-export async function assertAssignee(projectId: string, assigneeId: string | null | undefined) {
+export async function assertAssignee(companyId: string, assigneeId: string | null | undefined) {
   if (!assigneeId) return;
-  const member = await prisma.projectMember.findUnique({
-    where: { projectId_userId: { projectId, userId: assigneeId } },
+  const member = await prisma.companyMember.findUnique({
+    where: { companyId_userId: { companyId, userId: assigneeId } },
     include: { user: { select: { active: true, name: true } } },
   });
   if (!member?.user.active) {
-    throw new AppError(400, "VALIDATION_ERROR", "Assignee must be an active project member");
+    throw new AppError(400, "VALIDATION_ERROR", "Assignee must be an active member of this company");
   }
   return member.user.name;
 }

@@ -8,16 +8,16 @@ import { rankAtEnd, rankBeside } from "@/lib/ranks";
 import { issueOrder, issueWhere, parseIssueQuery, type IssueListQuery } from "@/lib/issue-query";
 import type { IssueCard } from "@/lib/types";
 import { bulkSchema, issueCreateSchema, issuePatchSchema, parseBody } from "@/lib/validators";
-import { assertAssignee, assertCan, assertIssue, assertProject, writeActivity } from "@/server/access";
+import { assertAssignee, assertCan, assertIssue, assertCompany, writeActivity } from "@/server/access";
 import { getSettings } from "@/server/settings";
 import { notify } from "@/server/notifications";
 
 const listInclude = {
-  project: { select: { id: true, key: true, name: true, status: true } },
+  company: { select: { id: true, key: true, name: true } },
   assignee: { select: { id: true, name: true } },
   reporter: { select: { id: true, name: true } },
   tags: { select: { tag: { select: { id: true, name: true, color: true } } } },
-  parent: { select: { id: true, number: true, title: true, project: { select: { key: true } } } },
+  parent: { select: { id: true, number: true, title: true, company: { select: { key: true } } } },
   children: { select: { status: true } },
 } satisfies Prisma.IssueInclude;
 
@@ -58,8 +58,8 @@ export async function getIssue(actor: Actor, issueId: string) {
       comments: { include: { author: { select: { id: true, name: true } } }, orderBy: { createdAt: "asc" } },
       attachments: { include: { uploadedBy: { select: { id: true, name: true } } }, orderBy: { createdAt: "desc" } },
       activities: { include: { actor: { select: { id: true, name: true } } }, orderBy: { createdAt: "desc" }, take: 100 },
-      blocking: { include: { related: { include: { project: { select: { key: true } } } } } },
-      blockedBy: { include: { issue: { include: { project: { select: { key: true } } } } } },
+      blocking: { include: { related: { include: { company: { select: { key: true } } } } } },
+      blockedBy: { include: { issue: { include: { company: { select: { key: true } } } } } },
     },
   });
   const children = await prisma.issue.findMany({
@@ -123,24 +123,24 @@ export async function getIssue(actor: Actor, issueId: string) {
 export async function createIssue(actor: Actor, body: unknown) {
   assertCan(actor, "issue.create");
   const input = parseBody(issueCreateSchema, body);
-  const project = await assertProject(actor, input.projectId, true);
+  const project = await assertCompany(actor, input.companyId);
   await assertAssignee(project.id, input.assigneeId);
   if (input.parentId) await assertParent(actor, input.parentId, project.id);
   if (input.tagIds?.length) await assertTags(project.id, input.tagIds);
   const issueId = await prisma.$transaction(async (tx) => {
-    const updated = await tx.project.update({
+    const updated = await tx.company.update({
       where: { id: project.id },
       data: { nextIssueNumber: { increment: 1 } },
       select: { nextIssueNumber: true },
     });
     const number = updated.nextIssueNumber - 1;
     const max = await tx.issue.aggregate({
-      where: { projectId: project.id, status: input.status },
+      where: { companyId: project.id, status: input.status },
       _max: { rank: true },
     });
     const created = await tx.issue.create({
       data: {
-        projectId: project.id,
+        companyId: project.id,
         number,
         title: input.title,
         description: input.description || null,
@@ -180,11 +180,8 @@ export async function updateIssue(actor: Actor, issueId: string, body: unknown) 
   if (current.archivedAt && input.archived !== false) {
     throw new AppError(400, "VALIDATION_ERROR", "Restore the issue before editing it");
   }
-  if (current.project.status === "ARCHIVED") {
-    throw new AppError(400, "VALIDATION_ERROR", "This project is archived");
-  }
-  if (input.assigneeId) await assertAssignee(current.projectId, input.assigneeId);
-  if (input.tagIds) await assertTags(current.projectId, input.tagIds);
+  if (input.assigneeId) await assertAssignee(current.companyId, input.assigneeId);
+  if (input.tagIds) await assertTags(current.companyId, input.tagIds);
 
   await prisma.$transaction(async (tx) => {
     const data: Prisma.IssueUpdateInput = {};
@@ -236,7 +233,7 @@ export async function updateIssue(actor: Actor, issueId: string, body: unknown) 
       });
     }
     if (input.status || input.overIssueId) {
-      data.rank = await resolveRank(tx, current.projectId, nextStatus, current.id, input.overIssueId, input.place);
+      data.rank = await resolveRank(tx, current.companyId, nextStatus, current.id, input.overIssueId, input.place);
     }
     if (input.tagIds) {
       const oldNames = current.tags.map((row) => row.tag.name).sort().join(", ");
@@ -257,7 +254,7 @@ export async function updateIssue(actor: Actor, issueId: string, body: unknown) 
       await writeActivity(tx, { issueId: current.id, actorId: actor.id, ...change });
     }
     if (input.assigneeId && input.assigneeId !== current.assigneeId && input.assigneeId !== actor.id) {
-      const key = formatIssueKey(current.project.key, current.number);
+      const key = formatIssueKey(current.company.key, current.number);
       await notify(tx, {
         userId: input.assigneeId,
         type: "ASSIGNED",
@@ -286,22 +283,19 @@ export async function deleteIssue(actor: Actor, issueId: string) {
 export async function duplicateIssue(actor: Actor, issueId: string) {
   assertCan(actor, "issue.create");
   const source = await assertIssue(actor, issueId);
-  if (source.project.status === "ARCHIVED") {
-    throw new AppError(400, "VALIDATION_ERROR", "This project is archived");
-  }
   const copyId = await prisma.$transaction(async (tx) => {
-    const updated = await tx.project.update({
-      where: { id: source.projectId },
+    const updated = await tx.company.update({
+      where: { id: source.companyId },
       data: { nextIssueNumber: { increment: 1 } },
       select: { nextIssueNumber: true, key: true },
     });
     const max = await tx.issue.aggregate({
-      where: { projectId: source.projectId, status: source.status },
+      where: { companyId: source.companyId, status: source.status },
       _max: { rank: true },
     });
     const created = await tx.issue.create({
       data: {
-        projectId: source.projectId,
+        companyId: source.companyId,
         number: updated.nextIssueNumber - 1,
         title: source.title,
         description: source.description,
@@ -316,7 +310,7 @@ export async function duplicateIssue(actor: Actor, issueId: string) {
       },
     });
     const key = formatIssueKey(updated.key, created.number);
-    await writeActivity(tx, { issueId: created.id, actorId: actor.id, action: "ISSUE_CREATED", newValue: `Duplicated from ${formatIssueKey(source.project.key, source.number)}` });
+    await writeActivity(tx, { issueId: created.id, actorId: actor.id, action: "ISSUE_CREATED", newValue: `Duplicated from ${formatIssueKey(source.company.key, source.number)}` });
     await writeActivity(tx, { issueId: source.id, actorId: actor.id, action: "DUPLICATED", newValue: key });
     return created.id;
   });
@@ -365,36 +359,36 @@ export async function exportIssues(actor: Actor, source: Record<string, string |
   return rows.map(serializeCard);
 }
 
-async function assertParent(actor: Actor, parentId: string, projectId: string) {
+async function assertParent(actor: Actor, parentId: string, companyId: string) {
   const parent = await assertIssue(actor, parentId);
-  if (parent.projectId !== projectId) throw new AppError(400, "VALIDATION_ERROR", "Subtasks stay in the parent project");
+  if (parent.companyId !== companyId) throw new AppError(400, "VALIDATION_ERROR", "Subtasks stay in the parent company");
   if (parent.parentId) throw new AppError(400, "VALIDATION_ERROR", "Subtasks can only be one level deep");
 }
 
-async function assertTags(projectId: string, tagIds: string[]) {
+async function assertTags(companyId: string, tagIds: string[]) {
   if (tagIds.length === 0) return;
-  const count = await prisma.tag.count({ where: { projectId, id: { in: tagIds } } });
-  if (count !== new Set(tagIds).size) throw new AppError(400, "VALIDATION_ERROR", "Tags must belong to the issue project");
+  const count = await prisma.tag.count({ where: { companyId, id: { in: tagIds } } });
+  if (count !== new Set(tagIds).size) throw new AppError(400, "VALIDATION_ERROR", "Tags must belong to this company");
 }
 
 async function resolveRank(
   tx: Prisma.TransactionClient,
-  projectId: string,
+  companyId: string,
   status: ListRow["status"],
   issueId: string,
   overIssueId?: string,
   place?: "before" | "after",
 ) {
   if (!overIssueId) {
-    const max = await tx.issue.aggregate({ where: { projectId, status, NOT: { id: issueId } }, _max: { rank: true } });
+    const max = await tx.issue.aggregate({ where: { companyId, status, NOT: { id: issueId } }, _max: { rank: true } });
     return rankAtEnd(max._max.rank);
   }
-  const over = await tx.issue.findFirst({ where: { id: overIssueId, projectId, status } });
+  const over = await tx.issue.findFirst({ where: { id: overIssueId, companyId, status } });
   if (!over) return rankAtEnd(null);
   const side = place || "before";
   const neighbor = await tx.issue.findFirst({
     where: {
-      projectId,
+      companyId,
       status,
       id: { notIn: [issueId, over.id] },
       rank: side === "before" ? { lt: over.rank } : { gt: over.rank },
@@ -404,14 +398,14 @@ async function resolveRank(
   return rankBeside(over.rank, neighbor?.rank ?? null, side);
 }
 
-function brief(issue: { id: string; number: number; title: string; status: string; project: { key: string } }) {
-  return { id: issue.id, key: formatIssueKey(issue.project.key, issue.number), title: issue.title, status: issue.status };
+function brief(issue: { id: string; number: number; title: string; status: string; company: { key: string } }) {
+  return { id: issue.id, key: formatIssueKey(issue.company.key, issue.number), title: issue.title, status: issue.status };
 }
 
 export function serializeCard(issue: ListRow): IssueCard {
   return {
     id: issue.id,
-    key: formatIssueKey(issue.project.key, issue.number),
+    key: formatIssueKey(issue.company.key, issue.number),
     number: issue.number,
     title: issue.title,
     description: issue.description || "",
@@ -423,12 +417,12 @@ export function serializeCard(issue: ListRow): IssueCard {
     createdAt: issue.createdAt.toISOString(),
     archivedAt: issue.archivedAt?.toISOString() ?? null,
     rank: issue.rank,
-    project: { id: issue.project.id, key: issue.project.key, name: issue.project.name },
+    company: { id: issue.company.id, key: issue.company.key, name: issue.company.name },
     assignee: issue.assignee,
     reporter: issue.reporter,
     tags: issue.tags.map((row) => row.tag),
     parent: issue.parent
-      ? { id: issue.parent.id, key: formatIssueKey(issue.parent.project.key, issue.parent.number), title: issue.parent.title }
+      ? { id: issue.parent.id, key: formatIssueKey(issue.parent.company.key, issue.parent.number), title: issue.parent.title }
       : null,
     subtaskDone: issue.children.filter((child) => child.status === "DONE").length,
     subtaskTotal: issue.children.length,

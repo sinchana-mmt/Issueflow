@@ -1,6 +1,7 @@
 import { hashPassword } from "better-auth/crypto";
 import { headers } from "next/headers";
 import { ROLES, type Role } from "@/lib/constants";
+import { workEmail } from "@/lib/email";
 import { AppError, forbidden } from "@/lib/errors";
 import { can, type Actor } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -15,12 +16,13 @@ const publicUser = {
   role: true,
   active: true,
   createdAt: true,
+  memberships: { select: { companyId: true, delegated: true } },
 } as const;
 
 export async function listPeople(actor: Actor) {
   if (actor.role !== "USER") return listUsers(actor);
-  const rows = await prisma.projectMember.findMany({
-    where: { project: { members: { some: { userId: actor.id } } } },
+  const rows = await prisma.companyMember.findMany({
+    where: { company: { members: { some: { userId: actor.id } } } },
     include: { user: { select: publicUser } },
   });
   const seen = new Map<string, (typeof rows)[number]["user"]>();
@@ -38,7 +40,8 @@ export async function listUsers(actor: Actor) {
 }
 
 export async function provisionUser(input: { name: string; email: string; password: string; role: Role }) {
-  const email = input.email.toLowerCase();
+  const email = workEmail(input.email);
+  if (!email) throw new AppError(400, "VALIDATION_ERROR", "Use a real company email address");
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) throw new AppError(409, "CONFLICT", "A user with that email already exists");
   const id = crypto.randomUUID();
@@ -98,10 +101,21 @@ export async function updateUser(actor: Actor, userId: string, body: unknown) {
     const others = await prisma.user.count({ where: { role: "SUPERADMIN", active: true, NOT: { id: user.id } } });
     if (others === 0) throw new AppError(400, "VALIDATION_ERROR", "At least one active superadmin is required");
   }
+  let email: string | undefined;
+  if (input.email) {
+    const next = workEmail(input.email);
+    if (!next) throw new AppError(400, "VALIDATION_ERROR", "Use a real company email address");
+    email = next;
+  }
+  if (email && email !== user.email) {
+    const taken = await prisma.user.findUnique({ where: { email } });
+    if (taken) throw new AppError(409, "CONFLICT", "A user with that email already exists");
+  }
   const updated = await prisma.user.update({
     where: { id: user.id },
     data: {
       name: input.name,
+      email,
       role: input.role,
       active: input.active,
     },
@@ -111,6 +125,30 @@ export async function updateUser(actor: Actor, userId: string, body: unknown) {
     await audit(actor.id, input.active === false ? "user.deactivate" : "user.update", "user", user.id, updated.email);
   }
   return serializeUser(updated);
+}
+
+export async function deleteUser(actor: Actor, userId: string) {
+  assertCan(actor, "user.delete");
+  if (actor.id === userId) throw new AppError(400, "VALIDATION_ERROR", "You cannot delete your own account");
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
+  if (user.role === "SUPERADMIN") {
+    const others = await prisma.user.count({ where: { role: "SUPERADMIN", active: true, NOT: { id: user.id } } });
+    if (others === 0) throw new AppError(400, "VALIDATION_ERROR", "At least one active superadmin is required");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.company.updateMany({ where: { createdById: userId }, data: { createdById: actor.id } });
+    await tx.issue.updateMany({ where: { reporterId: userId }, data: { reporterId: actor.id } });
+    await tx.issue.updateMany({ where: { assigneeId: userId }, data: { assigneeId: null } });
+    await tx.comment.updateMany({ where: { authorId: userId }, data: { authorId: actor.id } });
+    await tx.attachment.updateMany({ where: { uploadedById: userId }, data: { uploadedById: actor.id } });
+    await tx.activityLog.updateMany({ where: { actorId: userId }, data: { actorId: actor.id } });
+    await tx.adminAudit.updateMany({ where: { actorId: userId }, data: { actorId: actor.id } });
+    await tx.dependency.updateMany({ where: { createdById: userId }, data: { createdById: actor.id } });
+    await tx.user.delete({ where: { id: userId } });
+  });
+  await audit(actor.id, "user.delete", "user", userId, user.email);
+  return { deleted: true };
 }
 
 export async function changeOwnPassword(actor: Actor, body: unknown) {
@@ -131,7 +169,15 @@ export async function changeOwnPassword(actor: Actor, body: unknown) {
   return { changed: true };
 }
 
-function serializeUser(user: { id: string; name: string; email: string; role: string; active: boolean; createdAt: Date }) {
+function serializeUser(user: {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
+  createdAt: Date;
+  memberships?: { companyId: string; delegated: boolean }[];
+}) {
   return {
     id: user.id,
     name: user.name,
@@ -139,5 +185,6 @@ function serializeUser(user: { id: string; name: string; email: string; role: st
     role: ROLES.includes(user.role as Role) ? (user.role as Role) : "USER",
     active: user.active,
     createdAt: user.createdAt.toISOString(),
+    companies: user.memberships || [],
   };
 }

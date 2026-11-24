@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ISSUE_STATUSES, ISSUE_TYPES, LINK_TYPES, PRIORITIES, ROLES, TAG_COLORS } from "@/lib/constants";
+import { workEmail } from "@/lib/email";
 import { AppError } from "@/lib/errors";
 
 const due = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -8,13 +9,21 @@ export const passwordSchema = z.string().min(8).max(128);
 
 export const userCreateSchema = z.object({
   name: z.string().trim().min(1).max(80),
-  email: z.string().trim().email().max(200),
+  email: z.string().trim().max(200).transform((value, ctx) => {
+    const email = workEmail(value);
+    if (!email) {
+      ctx.addIssue({ code: "custom", message: "Use a real company email address" });
+      return z.NEVER;
+    }
+    return email;
+  }),
   password: passwordSchema,
   role: z.enum(ROLES).default("USER"),
 });
 
 export const userPatchSchema = z.object({
   name: z.string().trim().min(1).max(80).optional(),
+  email: z.string().trim().max(200).optional().refine((value) => value === undefined || workEmail(value) !== null, "Use a real company email address"),
   role: z.enum(ROLES).optional(),
   active: z.boolean().optional(),
 });
@@ -24,21 +33,26 @@ export const passwordChangeSchema = z.object({
   newPassword: passwordSchema,
 });
 
-export const projectCreateSchema = z.object({
+const companyKey = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^[A-Z][A-Z0-9]{1,9}$/, "Use 2–10 letters or numbers, starting with a letter");
+
+export const companyCreateSchema = z.object({
   name: z.string().trim().min(1).max(120),
-  key: z
-    .string()
-    .trim()
-    .toUpperCase()
-    .regex(/^[A-Z][A-Z0-9]{1,9}$/, "Use 2–10 letters or numbers, starting with a letter"),
-  description: z.string().trim().max(5000).optional().nullable(),
+  key: companyKey,
 });
 
-export const projectPatchSchema = projectCreateSchema.partial().extend({
-  status: z.enum(["ACTIVE", "ARCHIVED"]).optional(),
+export const companyPatchSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  key: companyKey.optional(),
 });
 
-export const memberSchema = z.object({ userId: z.string().min(1) });
+export const memberSchema = z.object({
+  userId: z.string().min(1),
+  delegated: z.boolean().optional(),
+});
 
 export const tagCreateSchema = z.object({
   name: z.string().trim().min(1).max(40),
@@ -50,7 +64,7 @@ export const tagPatchSchema = tagCreateSchema.partial();
 export const issueCreateSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().max(100_000).optional().nullable(),
-  projectId: z.string().min(1),
+  companyId: z.string().min(1),
   type: z.enum(ISSUE_TYPES),
   status: z.enum(ISSUE_STATUSES).default("BACKLOG"),
   priority: z.enum(PRIORITIES).default("MEDIUM"),

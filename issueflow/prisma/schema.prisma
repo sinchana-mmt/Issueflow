@@ -19,8 +19,8 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
-  createdProjects     Project[]       @relation("ProjectCreator")
-  memberships         ProjectMember[]
+  createdCompanies    Company[]       @relation("CompanyCreator")
+  memberships         CompanyMember[]
   reportedIssues      Issue[]         @relation("IssueReporter")
   assignedIssues      Issue[]         @relation("IssueAssignee")
   comments            Comment[]
@@ -91,40 +91,38 @@ model AppSetting {
   updatedAt        DateTime @updatedAt
 }
 
-model Project {
-  id              String        @id @default(cuid())
+model Company {
+  id              String          @id @default(cuid())
   name            String
-  key             String        @unique
-  description     String?
-  status          ProjectStatus @default(ACTIVE)
-  archivedAt      DateTime?
-  nextIssueNumber Int           @default(1)
+  key             String          @unique
+  nextIssueNumber Int             @default(1)
   createdById     String
-  createdBy       User          @relation("ProjectCreator", fields: [createdById], references: [id], onDelete: Restrict)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  members         ProjectMember[]
+  createdBy       User            @relation("CompanyCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  members         CompanyMember[]
   issues          Issue[]
   tags            Tag[]
 
-  @@index([status])
+  @@index([name])
 }
 
-model ProjectMember {
-  projectId String
+model CompanyMember {
+  companyId String
   userId    String
+  delegated Boolean  @default(false)
   createdAt DateTime @default(now())
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@id([projectId, userId])
+  @@id([companyId, userId])
   @@index([userId])
 }
 
 model Issue {
   id          String      @id @default(cuid())
-  projectId   String
-  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  companyId   String
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   number      Int
   title       String
   description String?
@@ -151,8 +149,8 @@ model Issue {
   blocking    Dependency[] @relation("DependencySource")
   blockedBy   Dependency[] @relation("DependencyTarget")
 
-  @@unique([projectId, number])
-  @@index([projectId, status, rank])
+  @@unique([companyId, number])
+  @@index([companyId, status, rank])
   @@index([assigneeId, status])
   @@index([dueDate])
   @@index([updatedAt])
@@ -162,14 +160,14 @@ model Issue {
 
 model Tag {
   id        String     @id @default(cuid())
-  projectId String
-  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  companyId String
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   name      String
   color     String
   createdAt DateTime   @default(now())
   issues    IssueTag[]
 
-  @@unique([projectId, name])
+  @@unique([companyId, name])
 }
 
 model IssueTag {
@@ -278,11 +276,6 @@ model AdminAudit {
   createdAt  DateTime @default(now())
 
   @@index([createdAt])
-}
-
-enum ProjectStatus {
-  ACTIVE
-  ARCHIVED
 }
 
 enum IssueType {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getActor } from "@/lib/session";
 import { redirect } from "next/navigation";
+import { companyContext } from "@/server/companies";
 import { getDashboard } from "@/server/dashboard";
 import { PRIORITY_LABEL, STATUS_LABEL } from "@/lib/constants";
 
@@ -9,7 +10,9 @@ export const metadata = { title: "Overview" };
 export default async function OverviewPage() {
   const actor = await getActor();
   if (!actor) redirect("/login");
-  const data = await getDashboard(actor);
+  const context = await companyContext(actor);
+  const company = context.companies.find((item) => item.id === context.companyId);
+  const data = await getDashboard(actor, context.companyId || undefined);
   const stats = [
     ["Active", data.counts.active],
     ["Assigned to me", data.counts.mine],
@@ -21,7 +24,7 @@ export default async function OverviewPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Overview</h2>
-        <p className="text-sm text-muted">Counts come from the issues already in your projects.</p>
+        <p className="text-sm text-muted">{company ? `Issues for ${company.name}.` : "Add a company from Team to start tracking issues."}</p>
       </div>
       <section className="grid gap-3 sm:grid-cols-5">
         {stats.map(([label, value]) => (
@@ -36,17 +39,7 @@ export default async function OverviewPage() {
         <List title="My assigned issues" empty="Nothing is assigned to you." rows={data.assigned.map((issue) => ({ href: `/issues/${issue.id}`, key: issue.key, title: issue.title, meta: STATUS_LABEL[issue.status] }))} />
         <List title="Recently updated" empty="No recent updates." rows={data.recent.map((issue) => ({ href: `/issues/${issue.id}`, key: issue.key, title: issue.title, meta: PRIORITY_LABEL[issue.priority] }))} />
         <div className="rounded-2xl border border-line bg-panel p-4">
-          <h3 className="text-sm font-medium">Projects</h3>
-          <div className="mt-3 space-y-2">
-            {data.projects.length === 0 ? <p className="text-sm text-faint">Create a project to start tracking work.</p> : null}
-            {data.projects.map((project) => (
-              <Link key={project.id} href={`/projects/${project.id}`} className="flex items-center justify-between rounded-[10px] px-2 py-2 hover:bg-panel-2">
-                <span>{project.name}</span>
-                <span className="text-xs text-faint">{project.key}</span>
-              </Link>
-            ))}
-          </div>
-          <h3 className="mt-5 text-sm font-medium">Reminders</h3>
+          <h3 className="text-sm font-medium">Reminders</h3>
           <div className="mt-3 space-y-2">
             {data.notifications.length === 0 ? <p className="text-sm text-faint">No notifications yet.</p> : null}
             {data.notifications.map((note) => (

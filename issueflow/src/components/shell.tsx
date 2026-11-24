@@ -6,7 +6,6 @@ import { useState } from "react";
 import {
   Bell,
   Columns3,
-  FolderKanban,
   LayoutDashboard,
   List,
   LogOut,
@@ -22,20 +21,31 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { ROLE_LABEL } from "@/lib/constants";
 import type { Actor } from "@/lib/permissions";
-import { cn } from "@/lib/ui";
+import { cn, send } from "@/lib/ui";
 
 const links = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/issues", label: "All Issues", icon: List },
   { href: "/my-issues", label: "My Issues", icon: UserRound },
   { href: "/board", label: "Board", icon: Columns3 },
-  { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/tags", label: "Tags", icon: Tags },
   { href: "/team", label: "Team", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function Shell({ actor, unread, children }: { actor: Actor; unread: number; children: React.ReactNode }) {
+export function Shell({
+  actor,
+  unread,
+  companies,
+  companyId,
+  children,
+}: {
+  actor: Actor;
+  unread: number;
+  companies: { id: string; name: string }[];
+  companyId: string;
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -49,7 +59,7 @@ export function Shell({ actor, unread, children }: { actor: Actor; unread: numbe
           <button className="md:hidden" onClick={() => setOpen(false)} aria-label="Close menu"><X size={18} /></button>
         </div>
         <nav className="space-y-1">
-          {links.map((link) => {
+          {links.filter((link) => link.href !== "/team" || actor.role !== "USER").map((link) => {
             const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             const Icon = link.icon;
             return (
@@ -66,6 +76,19 @@ export function Shell({ actor, unread, children }: { actor: Actor; unread: numbe
         <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b border-line bg-canvas/90 px-4 backdrop-blur md:px-6">
           <button className="md:hidden" onClick={() => setOpen(true)} aria-label="Open menu"><Menu size={18} /></button>
           <h1 className="hidden text-sm font-medium sm:block">{title}</h1>
+          {companies.length > 0 ? (
+            <select
+              aria-label="Company"
+              className="h-9 max-w-[180px] rounded-[10px] border border-line bg-panel px-2 text-sm"
+              value={companyId}
+              onChange={async (event) => {
+                await send("/api/company", { method: "POST", body: JSON.stringify({ id: event.target.value }) });
+                router.refresh();
+              }}
+            >
+              {companies.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}
+            </select>
+          ) : null}
           <form action="/issues" className="mx-auto flex w-full max-w-md items-center gap-2 rounded-[10px] border border-line bg-panel px-3">
             <Search size={15} className="text-faint" />
             <input name="q" placeholder="Search by key or title" className="h-9 w-full bg-transparent text-sm outline-none placeholder:text-faint" />

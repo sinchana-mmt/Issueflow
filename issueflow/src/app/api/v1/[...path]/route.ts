@@ -21,18 +21,18 @@ import {
 import { listNotifications, markRead } from "@/server/reminders";
 import {
   addMember,
-  createProject,
+  createCompany,
   createTag,
   deleteTag,
-  getProject,
-  listProjects,
+  getCompany,
+  listCompanies,
   listTags,
   removeMember,
-  updateProject,
+  updateCompany,
   updateTag,
-} from "@/server/projects";
+} from "@/server/companies";
 import { settingsView, updateSettings } from "@/server/settings";
-import { changeOwnPassword, createUser, listPeople, listUsers, updateUser } from "@/server/users";
+import { changeOwnPassword, createUser, deleteUser, listPeople, listUsers, updateUser } from "@/server/users";
 import { prisma } from "@/lib/prisma";
 import type { Actor } from "@/lib/permissions";
 
@@ -48,15 +48,16 @@ const routes: Route[] = [
   { method: "GET", pattern: "people", handle: (actor) => listPeople(actor) },
   { method: "POST", pattern: "users", handle: (actor, request) => readJson(request).then((body) => createUser(actor, body)) },
   { method: "PATCH", pattern: "users/:id", handle: (actor, request, params) => readJson(request).then((body) => updateUser(actor, params.id, body)) },
+  { method: "DELETE", pattern: "users/:id", handle: (actor, _request, params) => deleteUser(actor, params.id) },
   { method: "POST", pattern: "users/me/password", handle: (actor, request) => readJson(request).then((body) => changeOwnPassword(actor, body)) },
-  { method: "GET", pattern: "projects", handle: (actor) => listProjects(actor) },
-  { method: "POST", pattern: "projects", handle: (actor, request) => readJson(request).then((body) => createProject(actor, body)) },
-  { method: "GET", pattern: "projects/:id", handle: (actor, _request, params) => getProject(actor, params.id) },
-  { method: "PATCH", pattern: "projects/:id", handle: (actor, request, params) => readJson(request).then((body) => updateProject(actor, params.id, body)) },
-  { method: "POST", pattern: "projects/:id/members", handle: (actor, request, params) => readJson(request).then((body) => addMember(actor, params.id, body)) },
-  { method: "DELETE", pattern: "projects/:id/members/:userId", handle: (actor, _request, params) => removeMember(actor, params.id, params.userId) },
-  { method: "GET", pattern: "projects/:id/tags", handle: (actor, _request, params) => listTags(actor, params.id) },
-  { method: "POST", pattern: "projects/:id/tags", handle: (actor, request, params) => readJson(request).then((body) => createTag(actor, params.id, body)) },
+  { method: "GET", pattern: "companies", handle: (actor) => listCompanies(actor) },
+  { method: "POST", pattern: "companies", handle: (actor, request) => readJson(request).then((body) => createCompany(actor, body)) },
+  { method: "GET", pattern: "companies/:id", handle: (actor, _request, params) => getCompany(actor, params.id) },
+  { method: "PATCH", pattern: "companies/:id", handle: (actor, request, params) => readJson(request).then((body) => updateCompany(actor, params.id, body)) },
+  { method: "POST", pattern: "companies/:id/members", handle: (actor, request, params) => readJson(request).then((body) => addMember(actor, params.id, body)) },
+  { method: "DELETE", pattern: "companies/:id/members/:userId", handle: (actor, _request, params) => removeMember(actor, params.id, params.userId) },
+  { method: "GET", pattern: "companies/:id/tags", handle: (actor, _request, params) => listTags(actor, params.id) },
+  { method: "POST", pattern: "companies/:id/tags", handle: (actor, request, params) => readJson(request).then((body) => createTag(actor, params.id, body)) },
   { method: "GET", pattern: "tags", handle: (actor) => listTags(actor) },
   { method: "PATCH", pattern: "tags/:id", handle: (actor, request, params) => readJson(request).then((body) => updateTag(actor, params.id, body)) },
   { method: "DELETE", pattern: "tags/:id", handle: (actor, _request, params) => deleteTag(actor, params.id) },
@@ -72,7 +73,7 @@ const routes: Route[] = [
   { method: "POST", pattern: "issues/:id/subtasks", handle: async (actor, request, params) => {
     const parent = await getIssue(actor, params.id);
     const body = await readJson(request);
-    return createIssue(actor, { ...(body as object), projectId: parent.project.id, parentId: parent.id });
+    return createIssue(actor, { ...(body as object), companyId: parent.company.id, parentId: parent.id });
   } },
   { method: "GET", pattern: "issues/:id/comments", handle: (actor, _request, params) => getIssue(actor, params.id).then((issue) => issue.comments) },
   { method: "POST", pattern: "issues/:id/comments", handle: (actor, request, params) => readJson(request).then((body) => addComment(actor, params.id, body)) },
@@ -139,9 +140,9 @@ const routes: Route[] = [
 ];
 
 function csvResponse(issues: IssueCard[]) {
-  const header = ["Key", "Title", "Project", "Type", "Status", "Priority", "Assignee", "Reporter", "Due", "Tags", "Updated"];
+  const header = ["Key", "Title", "Company", "Type", "Status", "Priority", "Assignee", "Reporter", "Due", "Tags", "Updated"];
   const lines = issues.map((issue) =>
-    [issue.key, issue.title, issue.project.key, issue.type, issue.status, issue.priority, issue.assignee?.name || "", issue.reporter.name, issue.dueDate || "", issue.tags.map((tag) => tag.name).join("|"), issue.updatedAt]
+    [issue.key, issue.title, issue.company.key, issue.type, issue.status, issue.priority, issue.assignee?.name || "", issue.reporter.name, issue.dueDate || "", issue.tags.map((tag) => tag.name).join("|"), issue.updatedAt]
       .map((value) => `"${String(value).replaceAll('"', '""')}"`)
       .join(","),
   );

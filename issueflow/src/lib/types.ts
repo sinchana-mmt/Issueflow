@@ -15,7 +15,7 @@ export type IssueCard = {
   createdAt: string;
   archivedAt: string | null;
   rank: number;
-  project: { id: string; key: string; name: string };
+  company: { id: string; key: string; name: string };
   assignee: Person | null;
   reporter: Person;
   tags: TagRef[];

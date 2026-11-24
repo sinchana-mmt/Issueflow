@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
 import { IssuesScreen } from "@/components/issues-screen";
 import { parseIssueQuery } from "@/lib/issue-query";
-import { can } from "@/lib/permissions";
 import { getActor } from "@/lib/session";
+import { companyContext, listTags } from "@/server/companies";
 import { listFilters } from "@/server/filters";
 import { listIssues } from "@/server/issues";
-import { listProjects, listTags } from "@/server/projects";
 import { listPeople } from "@/server/users";
 
 export const metadata = { title: "All issues" };
@@ -14,23 +13,22 @@ export default async function IssuesPage({ searchParams }: { searchParams: Promi
   const actor = await getActor();
   if (!actor) redirect("/login");
   const params = await searchParams;
-  const query = parseIssueQuery(params);
-  const [result, projects, people, tags, filters] = await Promise.all([
+  const context = await companyContext(actor);
+  const query = parseIssueQuery(params, { companyId: context.companyId || undefined });
+  const [result, people, tags, filters] = await Promise.all([
     listIssues(actor, query),
-    listProjects(actor),
     listPeople(actor),
-    listTags(actor),
+    listTags(actor, context.companyId || undefined),
     listFilters(actor),
   ]);
   return (
     <IssuesScreen
       {...result}
       basePath="/issues"
-      query={plain(params)}
-      projects={projects}
+      query={{ ...plain(params), companyId: query.companyId }}
       people={people}
-      tags={tags.map((tag) => ({ ...tag, project: tag.project }))}
-      filters={can(actor, "export") ? filters : filters}
+      tags={tags}
+      filters={filters}
     />
   );
 }

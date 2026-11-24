@@ -8,7 +8,7 @@ import { PRIORITY_LABEL, STATUS_LABEL } from "@/lib/constants";
 import type { IssueCard, Person, TagRef } from "@/lib/types";
 import { send } from "@/lib/ui";
 
-const columns = ["key", "title", "project", "type", "status", "priority", "assignee", "due", "updated"] as const;
+const columns = ["key", "title", "company", "type", "status", "priority", "assignee", "due", "updated"] as const;
 
 export function IssuesScreen({
   issues,
@@ -16,7 +16,6 @@ export function IssuesScreen({
   page,
   pageSize,
   query,
-  projects,
   people,
   tags,
   filters,
@@ -27,9 +26,8 @@ export function IssuesScreen({
   page: number;
   pageSize: number;
   query: Record<string, string | undefined>;
-  projects: { id: string; name: string; key: string }[];
   people: Person[];
-  tags: (TagRef & { project?: { key: string } })[];
+  tags: TagRef[];
   filters: { id: string; name: string; queryString: string }[];
   basePath: string;
 }) {
@@ -74,11 +72,8 @@ export function IssuesScreen({
           <a className="inline-flex h-9 items-center rounded-[10px] border border-line px-3 text-sm" href={`/api/v1/exports/issues.json?${exportQuery}`}>JSON</a>
         </div>
       </div>
-      <form action={basePath} className="grid gap-2 rounded-2xl border border-line bg-panel p-3 md:grid-cols-6">
-        <Select name="projectId" defaultValue={query.projectId || ""}>
-          <option value="">All projects</option>
-          {projects.map((project) => <option key={project.id} value={project.id}>{project.key}</option>)}
-        </Select>
+      <form action={basePath} className="grid gap-2 rounded-2xl border border-line bg-panel p-3 md:grid-cols-5">
+        <input type="hidden" name="companyId" value={query.companyId || ""} />
         <Select name="status" defaultValue={query.status || ""}>
           <option value="">Any status</option>
           {Object.entries(STATUS_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
@@ -94,7 +89,7 @@ export function IssuesScreen({
         </Select>
         <Select name="tagId" defaultValue={query.tagId || ""}>
           <option value="">Any tag</option>
-          {tags.map((tag) => <option key={tag.id} value={tag.id}>{tag.project ? `${tag.project.key} / ` : ""}{tag.name}</option>)}
+          {tags.map((tag) => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
         </Select>
         <Select name="due" defaultValue={query.due || ""}>
           <option value="">Any due date</option>
@@ -169,7 +164,7 @@ export function IssuesScreen({
               <th className="w-10 px-3 py-3" />
               {visible.includes("key") ? <th className="px-3 py-3">Key</th> : null}
               {visible.includes("title") ? <th className="px-3 py-3">Title</th> : null}
-              {visible.includes("project") ? <th className="px-3 py-3">Project</th> : null}
+              {visible.includes("company") ? <th className="px-3 py-3">Company</th> : null}
               {visible.includes("type") ? <th className="px-3 py-3">Type</th> : null}
               {visible.includes("status") ? <th className="px-3 py-3">Status</th> : null}
               {visible.includes("priority") ? <th className="px-3 py-3">Priority</th> : null}
@@ -187,7 +182,7 @@ export function IssuesScreen({
                 <td className="px-3 py-3"><input type="checkbox" checked={selected.includes(issue.id)} onChange={() => setSelected((current) => current.includes(issue.id) ? current.filter((id) => id !== issue.id) : [...current, issue.id])} /></td>
                 {visible.includes("key") ? <td className="px-3 py-3 font-mono text-xs text-accent-2"><Link href={`/issues/${issue.id}`}>{issue.key}</Link></td> : null}
                 {visible.includes("title") ? <td className="px-3 py-3"><Link href={`/issues/${issue.id}`} className="hover:underline">{issue.title}</Link>{issue.parent ? <div className="text-xs text-faint">Subtask of {issue.parent.key}</div> : null}</td> : null}
-                {visible.includes("project") ? <td className="px-3 py-3 text-muted">{issue.project.key}</td> : null}
+                {visible.includes("company") ? <td className="px-3 py-3 text-muted">{issue.company.name}</td> : null}
                 {visible.includes("type") ? <td className="px-3 py-3 text-muted">{issue.type}</td> : null}
                 {visible.includes("status") ? <td className="px-3 py-3"><Badge>{STATUS_LABEL[issue.status]}</Badge></td> : null}
                 {visible.includes("priority") ? <td className="px-3 py-3"><Badge tone={issue.priority === "CRITICAL" ? "critical" : issue.priority === "HIGH" ? "high" : issue.priority === "MEDIUM" ? "medium" : "low"}>{PRIORITY_LABEL[issue.priority]}</Badge></td> : null}

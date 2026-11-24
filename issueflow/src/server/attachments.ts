@@ -24,7 +24,7 @@ export function storedPath(storedName: string) {
 export async function saveAttachment(actor: Actor, issueId: string, file: File) {
   assertCan(actor, "attachment.upload");
   const issue = await assertIssue(actor, issueId);
-  if (issue.archivedAt || issue.project.status === "ARCHIVED") {
+  if (issue.archivedAt) {
     throw new AppError(400, "VALIDATION_ERROR", "Archived issues do not accept files");
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -55,7 +55,7 @@ export async function saveAttachment(actor: Actor, issueId: string, file: File) 
     await fs.unlink(storedPath(storedName)).catch(() => undefined);
     throw error;
   }
-  return { saved: true, key: formatIssueKey(issue.project.key, issue.number) };
+  return { saved: true, key: formatIssueKey(issue.company.key, issue.number) };
 }
 
 export async function readAttachment(actor: Actor, attachmentId: string) {

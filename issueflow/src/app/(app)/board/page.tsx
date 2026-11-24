@@ -4,8 +4,8 @@ import { Button, Select } from "@/components/ui";
 import { PRIORITIES, PRIORITY_LABEL } from "@/lib/constants";
 import { can } from "@/lib/permissions";
 import { getActor } from "@/lib/session";
+import { companyContext, listTags } from "@/server/companies";
 import { listBoard } from "@/server/issues";
-import { listProjects, listTags } from "@/server/projects";
 import { listPeople } from "@/server/users";
 
 export const metadata = { title: "Board" };
@@ -14,11 +14,12 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
   const actor = await getActor();
   if (!actor) redirect("/login");
   const params = await searchParams;
-  const [board, projects, people, tags] = await Promise.all([
-    listBoard(actor, params),
-    listProjects(actor),
+  const context = await companyContext(actor);
+  const scoped = { ...params, companyId: context.companyId };
+  const [board, people, tags] = await Promise.all([
+    listBoard(actor, scoped),
     listPeople(actor),
-    listTags(actor),
+    listTags(actor, context.companyId || undefined),
   ]);
   const value = (key: string) => {
     const raw = params[key];
@@ -30,11 +31,8 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
         <h2 className="text-2xl font-semibold tracking-tight">Board</h2>
         <p className="text-sm text-muted">Drag a card to change its status. The board never moves a card on its own.</p>
       </div>
-      <form action="/board" className="grid gap-2 rounded-2xl border border-line bg-panel p-3 md:grid-cols-5">
-        <Select name="projectId" defaultValue={value("projectId")}>
-          <option value="">All projects</option>
-          {projects.map((project) => <option key={project.id} value={project.id}>{project.key}</option>)}
-        </Select>
+      <form action="/board" className="grid gap-2 rounded-2xl border border-line bg-panel p-3 md:grid-cols-4">
+        <input type="hidden" name="companyId" value={context.companyId} />
         <Select name="assigneeId" defaultValue={value("assigneeId")}>
           <option value="">Any assignee</option>
           {people.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}

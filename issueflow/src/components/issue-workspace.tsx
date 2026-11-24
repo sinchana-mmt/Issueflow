@@ -110,7 +110,7 @@ export function IssueWorkspace({
             <form className="mt-3 flex gap-2" onSubmit={async (event) => {
               event.preventDefault();
               if (!subtask.trim()) return;
-              await send("/api/v1/issues", { method: "POST", body: JSON.stringify({ title: subtask.trim(), projectId: current.project.id, parentId: current.id, type: "TASK", status: "TODO", priority: current.priority }) });
+              await send("/api/v1/issues", { method: "POST", body: JSON.stringify({ title: subtask.trim(), companyId: current.company.id, parentId: current.id, type: "TASK", status: "TODO", priority: current.priority }) });
               setSubtask("");
               await reload();
             }}>
@@ -136,7 +136,7 @@ export function IssueWorkspace({
                   const value = event.target.value;
                   setQuery(value);
                   if (value.trim().length < 1) { setMatches([]); return; }
-                  const result = await send<{ issues: IssueCard[] }>(`/api/v1/issues?q=${encodeURIComponent(value)}&projectId=${current.project.id}&pageSize=6`);
+                  const result = await send<{ issues: IssueCard[] }>(`/api/v1/issues?q=${encodeURIComponent(value)}&companyId=${current.company.id}&pageSize=6`);
                   setMatches(result.issues.filter((item) => item.id !== current.id));
                 }} />
                 <Select value={linkType} onChange={(event) => setLinkType(event.target.value)}>
@@ -251,8 +251,8 @@ export function IssueWorkspace({
           <div className="mt-1">{current.reporter.name}</div>
         </div>
         <div className="text-sm">
-          <div className="text-muted">Project</div>
-          <Link className="mt-1 block" href={`/projects/${current.project.id}`}>{current.project.name}</Link>
+          <div className="text-muted">Company</div>
+          <div className="mt-1">{current.company.name}</div>
         </div>
         <div>
           <div className="text-sm text-muted">Tags</div>

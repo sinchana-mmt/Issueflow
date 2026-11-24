@@ -36,7 +36,7 @@ export async function addDependency(actor: Actor, issueId: string, body: unknown
       if (existing) throw new AppError(409, "CONFLICT", "Those issues are already linked");
     }
     await tx.dependency.create({ data: { issueId: fromId, relatedId: toId, type, createdById: actor.id } });
-    const label = `${input.type === "BLOCKED_BY" ? "Is blocked by" : type === "BLOCKS" ? "Blocks" : type === "RELATES" ? "Relates to" : "Duplicates"} ${formatIssueKey(related.project.key, related.number)}`;
+    const label = `${input.type === "BLOCKED_BY" ? "Is blocked by" : type === "BLOCKS" ? "Blocks" : type === "RELATES" ? "Relates to" : "Duplicates"} ${formatIssueKey(related.company.key, related.number)}`;
     await writeActivity(tx, { issueId: origin.id, actorId: actor.id, action: "DEPENDENCY_ADDED", newValue: label });
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   return { saved: true };
@@ -47,8 +47,8 @@ export async function removeDependency(actor: Actor, dependencyId: string) {
   const row = await prisma.dependency.findUnique({
     where: { id: dependencyId },
     include: {
-      issue: { include: { project: { select: { key: true } } } },
-      related: { include: { project: { select: { key: true } } } },
+      issue: { include: { company: { select: { key: true } } } },
+      related: { include: { company: { select: { key: true } } } },
     },
   });
   if (!row) throw new AppError(404, "NOT_FOUND", "Dependency not found");
@@ -59,7 +59,7 @@ export async function removeDependency(actor: Actor, dependencyId: string) {
       issueId: row.issueId,
       actorId: actor.id,
       action: "DEPENDENCY_REMOVED",
-      oldValue: formatIssueKey(row.related.project.key, row.related.number),
+      oldValue: formatIssueKey(row.related.company.key, row.related.number),
     });
   });
   return { deleted: true };

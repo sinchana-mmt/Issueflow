@@ -5,7 +5,7 @@ import { addCalendarDays, todayIso } from "@/lib/reminders";
 
 export type IssueListQuery = {
   q?: string;
-  projectId?: string;
+  companyId?: string;
   status: string[];
   priority: string[];
   assigneeId?: string;
@@ -47,7 +47,7 @@ export function parseIssueQuery(
   const due = dueValue === "overdue" || dueValue === "today" || dueValue === "week" || dueValue === "none" ? dueValue : undefined;
   return {
     q: one(input.q) || undefined,
-    projectId: one(input.projectId) || defaults.projectId,
+    companyId: one(input.companyId) || defaults.companyId,
     status: many(input.status).filter((status) => (ISSUE_STATUSES as readonly string[]).includes(status)),
     priority: many(input.priority).filter((priority) => (PRIORITIES as readonly string[]).includes(priority)),
     assigneeId: one(input.assigneeId) || defaults.assigneeId,
@@ -69,10 +69,10 @@ export function issueWhere(
   timeZone: string,
 ): Prisma.IssueWhereInput {
   const where: Prisma.IssueWhereInput = {};
-  const project: Prisma.ProjectWhereInput = {};
-  if (!isAdmin) project.members = { some: { userId: actorId } };
-  if (query.projectId) project.id = query.projectId;
-  if (Object.keys(project).length > 0) where.project = project;
+  const company: Prisma.CompanyWhereInput = {};
+  if (!isAdmin) company.members = { some: { userId: actorId } };
+  if (query.companyId) company.id = query.companyId;
+  if (Object.keys(company).length > 0) where.company = company;
   if (query.status.length > 0) where.status = { in: query.status as never };
   if (query.priority.length > 0) where.priority = { in: query.priority as never };
   if (query.mine) where.assigneeId = actorId;
@@ -101,7 +101,7 @@ export function issueWhere(
   if (query.q) {
     const key = parseIssueKey(query.q);
     if (key) {
-      where.AND = [{ project: { key: key.projectKey } }, { number: key.number }];
+      where.AND = [{ company: { key: key.companyKey } }, { number: key.number }];
     } else {
       where.title = { contains: query.q, mode: "insensitive" };
     }

@@ -8,7 +8,7 @@ export async function listNotifications(actor: Actor) {
   const [items, unread] = await prisma.$transaction([
     prisma.notification.findMany({
       where: { userId: actor.id },
-      include: { issue: { select: { id: true, number: true, project: { select: { key: true } } } } },
+      include: { issue: { select: { id: true, number: true, company: { select: { key: true } } } } },
       orderBy: { createdAt: "desc" },
       take: 50,
     }),
@@ -24,7 +24,7 @@ export async function listNotifications(actor: Actor) {
       readAt: item.readAt?.toISOString() ?? null,
       createdAt: item.createdAt.toISOString(),
       issue: item.issue
-        ? { id: item.issue.id, key: formatIssueKey(item.issue.project.key, item.issue.number) }
+        ? { id: item.issue.id, key: formatIssueKey(item.issue.company.key, item.issue.number) }
         : null,
     })),
   };
@@ -47,7 +47,6 @@ export async function runDueReminders() {
       dueDate: { not: null },
       archivedAt: null,
       status: { not: "DONE" },
-      project: { status: "ACTIVE" },
     },
     select: {
       id: true,
@@ -56,7 +55,7 @@ export async function runDueReminders() {
       dueDate: true,
       assigneeId: true,
       reporterId: true,
-      project: { select: { key: true } },
+      company: { select: { key: true } },
     },
   });
   let sent = 0;
@@ -77,7 +76,7 @@ export async function runDueReminders() {
           type,
           issueId: issue.id,
           dedupKey,
-          title: `${formatIssueKey(issue.project.key, issue.number)} is ${label}`,
+          title: `${formatIssueKey(issue.company.key, issue.number)} is ${label}`,
           body: issue.title,
         },
       });

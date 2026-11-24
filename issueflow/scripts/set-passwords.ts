@@ -16,7 +16,7 @@ async function main() {
   }
   const superPassword = await hashPassword("MysoreMinds1@3");
   const userPassword = await hashPassword(DEFAULT_USER_PASSWORD);
-  const superadmin = await prisma.user.findUnique({ where: { email: "admin@issueflow.local" } });
+  const superadmin = await prisma.user.findFirst({ where: { role: "SUPERADMIN" } });
   if (superadmin) {
     await prisma.user.update({
       where: { id: superadmin.id },
@@ -27,7 +27,7 @@ async function main() {
       data: { password: superPassword },
     });
   }
-  const others = users.filter((user) => user.email !== "admin@issueflow.local");
+  const others = users.filter((user) => user.id !== superadmin?.id);
   for (const user of others) {
     await prisma.account.updateMany({
       where: { userId: user.id, providerId: "credential" },

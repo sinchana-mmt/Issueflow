@@ -11,9 +11,9 @@ export type Actor = {
 export type Action =
   | "user.create"
   | "user.update"
-  | "project.create"
-  | "project.update"
-  | "project.member.manage"
+  | "user.delete"
+  | "company.create"
+  | "company.member.manage"
   | "tag.manage"
   | "issue.create"
   | "issue.update"
@@ -37,9 +37,8 @@ const userActions = new Set<Action>([
 const adminActions = new Set<Action>([
   ...userActions,
   "user.create",
-  "project.create",
-  "project.update",
-  "project.member.manage",
+  "user.update",
+  "company.member.manage",
   "tag.manage",
   "issue.delete",
 ]);

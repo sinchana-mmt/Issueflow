@@ -7,84 +7,45 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button, Field, Input, Select } from "@/components/ui";
 import { DEFAULT_USER_PASSWORD, ROLES, ROLE_LABEL, TAG_COLORS, type Role } from "@/lib/constants";
+import { workEmail } from "@/lib/email";
 import { send } from "@/lib/ui";
 
-const projectSchema = z.object({
+const companySchema = z.object({
   name: z.string().trim().min(1),
   key: z.string().trim().min(2),
-  description: z.string().optional(),
 });
 
-export function ProjectCreator() {
+export function CompanyCreator() {
   const router = useRouter();
   const [error, setError] = useState("");
-  const form = useForm({ resolver: zodResolver(projectSchema), defaultValues: { name: "", key: "", description: "" } });
+  const form = useForm({ resolver: zodResolver(companySchema), defaultValues: { name: "", key: "" } });
   return (
-    <form className="grid gap-3 rounded-2xl border border-line bg-panel p-4 md:grid-cols-4" onSubmit={form.handleSubmit(async (values) => {
+    <form className="grid gap-3 rounded-2xl border border-line bg-panel p-4 md:grid-cols-3" onSubmit={form.handleSubmit(async (values) => {
       setError("");
       try {
-        const project = await send<{ id: string }>("/api/v1/projects", { method: "POST", body: JSON.stringify(values) });
-        router.push(`/projects/${project.id}`);
+        await send("/api/v1/companies", { method: "POST", body: JSON.stringify(values) });
+        form.reset({ name: "", key: "" });
         router.refresh();
       } catch (caught) {
-        setError(caught instanceof Error ? caught.message : "Could not create the project");
+        setError(caught instanceof Error ? caught.message : "Could not add the company");
       }
     })}>
-      <Field label="Name"><Input {...form.register("name")} /></Field>
-      <Field label="Key"><Input {...form.register("key")} placeholder="ECOM" /></Field>
-      <Field label="Description"><Input {...form.register("description")} /></Field>
-      <div className="flex items-end"><Button type="submit">Create project</Button></div>
-      {error ? <p className="text-sm text-danger md:col-span-4">{error}</p> : null}
+      <Field label="Company"><Input {...form.register("name")} placeholder="Mysore Minds" /></Field>
+      <Field label="Code"><Input {...form.register("key")} placeholder="MM" /></Field>
+      <div className="flex items-end"><Button type="submit">Add company</Button></div>
+      {error ? <p className="text-sm text-danger md:col-span-3">{error}</p> : null}
     </form>
   );
 }
 
-export function MemberControls({ projectId, users, members }: { projectId: string; users: { id: string; name: string }[]; members: { id: string }[] }) {
-  const router = useRouter();
-  const [userId, setUserId] = useState("");
-  const available = users.filter((user) => !members.some((member) => member.id === user.id));
-  return (
-    <div className="space-y-3">
-      <form className="flex gap-2" onSubmit={async (event) => {
-        event.preventDefault();
-        if (!userId) return;
-        await send(`/api/v1/projects/${projectId}/members`, { method: "POST", body: JSON.stringify({ userId }) });
-        setUserId("");
-        router.refresh();
-      }}>
-        <Select value={userId} onChange={(event) => setUserId(event.target.value)}>
-          <option value="">Choose a person</option>
-          {available.map((user) => <option key={user.id} value={user.id}>{user.name}</option>)}
-        </Select>
-        <Button type="submit" variant="subtle">Add to project</Button>
-      </form>
-    </div>
-  );
-}
-
-export function RemoveMember({ projectId, userId }: { projectId: string; userId: string }) {
-  const router = useRouter();
-  return <button className="text-xs text-faint" onClick={async () => { await send(`/api/v1/projects/${projectId}/members/${userId}`, { method: "DELETE" }); router.refresh(); }}>Remove</button>;
-}
-
-export function ArchiveProject({ projectId, archived }: { projectId: string; archived: boolean }) {
-  const router = useRouter();
-  return (
-    <Button variant="ghost" onClick={async () => {
-      await send(`/api/v1/projects/${projectId}`, { method: "PATCH", body: JSON.stringify({ status: archived ? "ACTIVE" : "ARCHIVED" }) });
-      router.refresh();
-    }}>{archived ? "Restore project" : "Archive project"}</Button>
-  );
-}
-
-export function TagForm({ projectId }: { projectId: string }) {
+export function TagForm({ companyId }: { companyId: string }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [color, setColor] = useState<(typeof TAG_COLORS)[number]>(TAG_COLORS[0]);
   return (
     <form className="flex flex-wrap gap-2" onSubmit={async (event) => {
       event.preventDefault();
-      await send(`/api/v1/projects/${projectId}/tags`, { method: "POST", body: JSON.stringify({ name, color }) });
+      await send(`/api/v1/companies/${companyId}/tags`, { method: "POST", body: JSON.stringify({ name, color }) });
       setName("");
       router.refresh();
     }}>
@@ -112,7 +73,7 @@ export function TagRow({ tag }: { tag: { id: string; name: string; color: string
 
 const userSchema = z.object({
   name: z.string().min(1),
-  email: z.string().email(),
+  email: z.string().trim().refine((value) => workEmail(value) !== null, "Use a real company email address"),
   role: z.enum(ROLES),
 });
 
@@ -143,16 +104,70 @@ export function TeamCreator({ roles }: { roles: Role[] }) {
   );
 }
 
-export function UserRow({ user }: { user: { id: string; name: string; role: string; active: boolean } }) {
+export function UserRow({
+  user,
+  companies,
+  canDelete,
+  canDelegate,
+}: {
+  user: { id: string; name: string; email: string; role: string; active: boolean; companies: { companyId: string; delegated: boolean }[] };
+  companies: { id: string; name: string }[];
+  canDelete: boolean;
+  canDelegate: boolean;
+}) {
   const router = useRouter();
+  const [email, setEmail] = useState(user.email);
+  const [error, setError] = useState("");
+  async function run(task: () => Promise<unknown>) {
+    setError("");
+    try {
+      await task();
+      router.refresh();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not update this person");
+    }
+  }
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Select defaultValue={user.role} onChange={async (event) => { await send(`/api/v1/users/${user.id}`, { method: "PATCH", body: JSON.stringify({ role: event.target.value }) }); router.refresh(); }}>
-        {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABEL[role]}</option>)}
-      </Select>
-      <Button variant={user.active ? "danger" : "subtle"} onClick={async () => { await send(`/api/v1/users/${user.id}`, { method: "PATCH", body: JSON.stringify({ active: !user.active }) }); router.refresh(); }}>
-        {user.active ? "Deactivate" : "Reactivate"}
-      </Button>
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Input className="h-9 max-w-56" type="email" value={email} onChange={(event) => setEmail(event.target.value)} onBlur={() => { if (email.trim().toLowerCase() !== user.email) void run(() => send(`/api/v1/users/${user.id}`, { method: "PATCH", body: JSON.stringify({ email }) })); }} />
+        <Select defaultValue={user.role} onChange={(event) => void run(() => send(`/api/v1/users/${user.id}`, { method: "PATCH", body: JSON.stringify({ role: event.target.value }) }))}>
+          {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABEL[role]}</option>)}
+        </Select>
+        <Button variant={user.active ? "danger" : "subtle"} onClick={() => void run(() => send(`/api/v1/users/${user.id}`, { method: "PATCH", body: JSON.stringify({ active: !user.active }) }))}>
+          {user.active ? "Deactivate" : "Reactivate"}
+        </Button>
+        {canDelete ? <Button variant="danger" onClick={() => void run(async () => { if (!window.confirm(`Delete ${user.name}?`)) return; await send(`/api/v1/users/${user.id}`, { method: "DELETE" }); })}>Delete</Button> : null}
+      </div>
+      <div className="flex flex-wrap gap-3">
+        {companies.map((company) => {
+          const membership = user.companies.find((item) => item.companyId === company.id);
+          return (
+            <label key={company.id} className="flex items-center gap-2 text-xs text-muted">
+              <input
+                type="checkbox"
+                checked={Boolean(membership)}
+                onChange={(event) => void run(async () => {
+                  if (event.target.checked) await send(`/api/v1/companies/${company.id}/members`, { method: "POST", body: JSON.stringify({ userId: user.id, delegated: false }) });
+                  else await send(`/api/v1/companies/${company.id}/members/${user.id}`, { method: "DELETE" });
+                })}
+              />
+              {company.name}
+              {canDelegate && membership ? (
+                <span className="inline-flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={membership.delegated}
+                    onChange={(event) => void run(() => send(`/api/v1/companies/${company.id}/members`, { method: "POST", body: JSON.stringify({ userId: user.id, delegated: event.target.checked }) }))}
+                  />
+                  Delegate
+                </span>
+              ) : null}
+            </label>
+          );
+        })}
+      </div>
+      {error ? <p className="text-xs text-danger">{error}</p> : null}
     </div>
   );
 }

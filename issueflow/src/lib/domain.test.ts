@@ -13,10 +13,14 @@ describe("permissions", () => {
     expect(can(actor("USER"), "issue.create")).toBe(true);
     expect(can(actor("USER"), "issue.update")).toBe(true);
     expect(can(actor("USER"), "export")).toBe(true);
-    expect(can(actor("USER"), "project.create")).toBe(false);
+    expect(can(actor("USER"), "company.create")).toBe(false);
+    expect(can(actor("USER"), "user.delete")).toBe(false);
     expect(can(actor("USER"), "issue.delete")).toBe(false);
     expect(can(actor("USER"), "user.create")).toBe(false);
-    expect(can(actor("ADMIN"), "project.create")).toBe(true);
+    expect(can(actor("ADMIN"), "company.create")).toBe(false);
+    expect(can(actor("ADMIN"), "company.member.manage")).toBe(true);
+    expect(can(actor("SUPERADMIN"), "company.create")).toBe(true);
+    expect(can(actor("SUPERADMIN"), "user.delete")).toBe(true);
     expect(can(actor("ADMIN"), "user.create")).toBe(true);
     expect(can(actor("ADMIN"), "issue.delete")).toBe(true);
     expect(can(actor("ADMIN"), "settings.update")).toBe(false);
@@ -30,7 +34,7 @@ describe("issue keys", () => {
     expect(formatIssueKey("ECOM", 1)).toBe("ECOM-001");
     expect(formatIssueKey("ECOM", 999)).toBe("ECOM-999");
     expect(formatIssueKey("ECOM", 1000)).toBe("ECOM-1000");
-    expect(parseIssueKey("web-12")).toEqual({ projectKey: "WEB", number: 12 });
+    expect(parseIssueKey("web-12")).toEqual({ companyKey: "WEB", number: 12 });
     expect(parseIssueKey("checkout")).toBeNull();
   });
 });

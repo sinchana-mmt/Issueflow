@@ -9,16 +9,16 @@ import { AppError, forbidden } from "@/lib/errors";
 export async function addComment(actor: Actor, issueId: string, body: unknown) {
   assertCan(actor, "comment.create");
   const issue = await assertIssue(actor, issueId);
-  if (issue.archivedAt || issue.project.status === "ARCHIVED") {
+  if (issue.archivedAt) {
     throw new AppError(400, "VALIDATION_ERROR", "Comments are closed on archived work");
   }
   const input = parseBody(commentSchema, body);
-  const members = await prisma.projectMember.findMany({
-    where: { projectId: issue.projectId },
+  const members = await prisma.companyMember.findMany({
+    where: { companyId: issue.companyId },
     include: { user: { select: { id: true, name: true } } },
   });
   const names = mentionedNames(input.body);
-  const key = formatIssueKey(issue.project.key, issue.number);
+  const key = formatIssueKey(issue.company.key, issue.number);
   await prisma.$transaction(async (tx) => {
     await tx.comment.create({ data: { issueId: issue.id, authorId: actor.id, body: input.body } });
     await writeActivity(tx, { issueId: issue.id, actorId: actor.id, action: "COMMENT_ADDED", newValue: input.body });

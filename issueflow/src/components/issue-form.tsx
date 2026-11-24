@@ -13,7 +13,7 @@ import { send } from "@/lib/ui";
 const schema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
   description: z.string().max(100000).optional(),
-  projectId: z.string().min(1, "Choose a project"),
+  companyId: z.string().min(1, "Choose a company"),
   type: z.enum(ISSUE_TYPES),
   status: z.enum(ISSUE_STATUSES),
   priority: z.enum(PRIORITIES),
@@ -23,15 +23,15 @@ const schema = z.object({
 });
 
 export function IssueForm({
-  projects,
+  companyId,
+  companyName,
   people,
   tags,
-  presetProjectId,
 }: {
-  projects: { id: string; name: string; key: string }[];
+  companyId: string;
+  companyName: string;
   people: Person[];
-  tags: (TagRef & { projectId?: string })[];
-  presetProjectId?: string;
+  tags: TagRef[];
 }) {
   const router = useRouter();
   const [error, setError] = useState("");
@@ -40,7 +40,7 @@ export function IssueForm({
     defaultValues: {
       title: "",
       description: "",
-      projectId: presetProjectId || projects[0]?.id || "",
+      companyId,
       type: "TASK" as const,
       status: "BACKLOG" as const,
       priority: "MEDIUM" as const,
@@ -49,8 +49,7 @@ export function IssueForm({
       tagIds: [] as string[],
     },
   });
-  const projectId = form.watch("projectId");
-  const projectTags = tags.filter((tag) => !tag.projectId || tag.projectId === projectId);
+  const projectTags = tags;
 
   return (
     <form
@@ -77,8 +76,9 @@ export function IssueForm({
       <Field label="Title"><Input {...form.register("title")} /></Field>
       <Field label="Description"><Textarea {...form.register("description")} placeholder="Markdown is supported" /></Field>
       <div className="grid gap-3 md:grid-cols-2">
-        <Field label="Project">
-          <Select {...form.register("projectId")}>{projects.map((project) => <option key={project.id} value={project.id}>{project.name} ({project.key})</option>)}</Select>
+        <Field label="Company">
+          <Input value={companyName} readOnly />
+          <input type="hidden" {...form.register("companyId")} />
         </Field>
         <Field label="Type">
           <Select {...form.register("type")}>{ISSUE_TYPES.map((type) => <option key={type} value={type}>{TYPE_LABEL[type]}</option>)}</Select>
@@ -121,8 +121,8 @@ export function IssueForm({
           </div>
         </fieldset>
       ) : null}
-      {error || form.formState.errors.title || form.formState.errors.projectId ? (
-        <p className="text-sm text-danger">{error || form.formState.errors.title?.message || form.formState.errors.projectId?.message}</p>
+      {error || form.formState.errors.title || form.formState.errors.companyId ? (
+        <p className="text-sm text-danger">{error || form.formState.errors.title?.message || form.formState.errors.companyId?.message}</p>
       ) : null}
       <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? "Creating" : "Create issue"}</Button>
     </form>
